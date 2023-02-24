@@ -23,8 +23,11 @@ def get_detection_area_image():
 
 @app.route('/detectTableOfArea', methods=['POST'])
 def get_table_data():
-    return get_table_detection(request.json)
+    try:
+        return get_table_detection(request.json)
+    except Exception as e:
+        print(e)
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=6000)
+    app.run(debug=True, port=8200)

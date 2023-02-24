@@ -50,20 +50,23 @@ def get_text_of_area(body):
     results = []
     # cut and save each area
     for regex in regex_components:
-        key = regex['Key']
-        left, upper, right, lower, page_no = regex['Area'].split(',')[:5]
-        left, upper, right, lower, page_no = int(left), int(upper), int(right), int(lower), int(page_no)
+        try:
+            key = regex['Key']
+            left, upper, right, lower, page_no = regex['Area'].split(',')[:5]
+            left, upper, right, lower, page_no = int(left), int(upper), int(right), int(lower), int(page_no)
 
-        jpg_path = os.path.join(pages_directory_path, f'page{page_no - 1}.jpg')
-        section_path = os.path.join(section_directory_path, f'{key}.jpg')
+            jpg_path = os.path.join(pages_directory_path, f'page{page_no - 1}.jpg')
+            section_path = os.path.join(section_directory_path, f'{key}.jpg')
 
-        img = Image.open(jpg_path)
-        # left, upper, right, lower
-        box = (left, upper, right, lower)
-        img2 = img.crop(box)
-        img2.save(section_path)
+            img = Image.open(jpg_path)
+            # left, upper, right, lower
+            box = (left, upper, right, lower)
+            img2 = img.crop(box)
+            img2.save(section_path)
 
-        # extract text from each section
-        extracted_text = pytesseract.image_to_string(img2, lang='eng')
-        results.append({'key': key, 'text': extracted_text})
+            # extract text from each section
+            extracted_text = pytesseract.image_to_string(img2, lang='eng')
+            results.append({'key': key, 'text': extracted_text})
+        except Exception as e:
+            print(e)
     return results
