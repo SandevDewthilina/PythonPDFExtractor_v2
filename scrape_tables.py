@@ -51,9 +51,12 @@ def get_camelot_table(body):
     if not os.path.exists(upload_file_path):
 
         try:
-            os.mkdir(upload_directory_path)
-            os.mkdir(pages_directory_path)
-            os.mkdir(section_directory_path)
+            if not os.path.exists(upload_directory_path):
+                os.mkdir(upload_directory_path)
+            if not os.path.exists(pages_directory_path):
+                os.mkdir(pages_directory_path)
+            if not os.path.exists(section_directory_path):
+                os.mkdir(section_directory_path)
         except Exception as e:
             print(e)
 
