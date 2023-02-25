@@ -7,10 +7,6 @@ app = Flask(__name__)
 CORS(app)
 
 
-# @app.route('/')
-# def index():
-#     return render_template('index.html')
-
 @app.route('/getTextOfArea', methods=['POST'])
 def get_area_text():
     return get_text_of_area(request.json)
