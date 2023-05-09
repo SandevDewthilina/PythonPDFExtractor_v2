@@ -51,52 +51,57 @@ def get_text_of_area(body):
 
     # initialize pytesseract
     pytesseract.tesseract_cmd = tesseract_path
-    results = []
+
+    output = []
     # cut and save each area
-    for regex in regex_components:
-        try:
-            key = regex['Key']
-            isGoogleVision = regex['IsGoogleVision']
-            left, upper, right, lower, page_no = regex['Area'].split(',')[:5]
-            left, upper, right, lower, page_no = int(left), int(upper), int(right), int(lower), int(page_no)
+    for page_no in range(len(images)):
+        results = []
+        for regex in regex_components:
+            try:
+                key = regex['Key']
+                isGoogleVision = regex['IsGoogleVision']
+                left, upper, right, lower = regex['Area'].split(',')[:4]
+                left, upper, right, lower = int(left), int(upper), int(right), int(lower)
 
-            jpg_path = os.path.join(pages_directory_path, f'page{page_no - 1}.jpg')
-            section_path = os.path.join(section_directory_path, f'{key}.jpg')
+                jpg_path = os.path.join(pages_directory_path, f'page{page_no}.jpg')
+                section_path = os.path.join(section_directory_path, f'{key}.jpg')
 
-            img = Image.open(jpg_path)
-            # left, upper, right, lower
-            box = (left, upper, right, lower)
-            img2 = img.crop(box)
-            img2.save(section_path)
+                img = Image.open(jpg_path)
+                # left, upper, right, lower
+                box = (left, upper, right, lower)
+                img2 = img.crop(box)
+                img2.save(section_path)
 
-            # extract text from each section
-            if isGoogleVision:
-                img_byte_arr = io.BytesIO()
-                img2.save(img_byte_arr, format='PNG')
-                img_byte_arr = img_byte_arr.getvalue()
-                image = vision.Image(content=img_byte_arr)
+                # extract text from each section
+                if isGoogleVision:
+                    img_byte_arr = io.BytesIO()
+                    img2.save(img_byte_arr, format='PNG')
+                    img_byte_arr = img_byte_arr.getvalue()
+                    image = vision.Image(content=img_byte_arr)
 
-                response = client.text_detection(image=image)
-                texts = response.text_annotations
+                    response = client.text_detection(image=image)
+                    texts = response.text_annotations
 
-                text = texts[0]
-                # print('\n"{}"'.format(text.description))
+                    text = texts[0]
+                    # print('\n"{}"'.format(text.description))
 
-                # vertices = (['({},{})'.format(vertex.x, vertex.y)
-                #             for vertex in text.bounding_poly.vertices])
+                    # vertices = (['({},{})'.format(vertex.x, vertex.y)
+                    #             for vertex in text.bounding_poly.vertices])
 
-                # print('bounds: {}'.format(','.join(vertices)))
+                    # print('bounds: {}'.format(','.join(vertices)))
 
-                if response.error.message:
-                    raise Exception(
-                        '{}\nFor more info on error messages, check: '
-                        'https://cloud.google.com/apis/design/errors'.format(
-                            response.error.message))
+                    if response.error.message:
+                        raise Exception(
+                            '{}\nFor more info on error messages, check: '
+                            'https://cloud.google.com/apis/design/errors'.format(
+                                response.error.message))
 
-                results.append({'key': key, 'text': text.description})
-            else:
-                extracted_text = pytesseract.image_to_string(img2, lang='eng')
-                results.append({'key': key, 'text': extracted_text})
-        except Exception as e:
-            print(e)
-    return results
+                    results.append({'key': key, 'text': text.description})
+                else:
+                    extracted_text = pytesseract.image_to_string(img2, lang='eng')
+                    results.append({'key': key, 'text': extracted_text})
+            except Exception as e:
+                print(e)
+        output.append(results)
+        print(output)
+    return output

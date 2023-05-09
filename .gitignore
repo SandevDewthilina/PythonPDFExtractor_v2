@@ -1,3 +1,4 @@
 temp_image_directory
 upload_directory
 __pycache__
+*.json
