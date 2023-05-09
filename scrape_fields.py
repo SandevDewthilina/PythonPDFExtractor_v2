@@ -1,8 +1,10 @@
 import requests
 import os
+import io
 from pdf2image import convert_from_path
 from PIL import Image
 from pytesseract import pytesseract
+from google.cloud import vision
 
 tesseract_path = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
@@ -12,6 +14,8 @@ def get_text_of_area(body):
     file_name = body['file_name']
     upload_name = str(body['upload_name'])
     regex_components = body['regexComponents']
+
+    client = vision.ImageAnnotatorClient()
 
     upload_directory_path = os.path.join('upload_directory', upload_name)
     upload_file_path = os.path.join(upload_directory_path, file_name)
@@ -52,6 +56,7 @@ def get_text_of_area(body):
     for regex in regex_components:
         try:
             key = regex['Key']
+            isGoogleVision = regex['IsGoogleVision']
             left, upper, right, lower, page_no = regex['Area'].split(',')[:5]
             left, upper, right, lower, page_no = int(left), int(upper), int(right), int(lower), int(page_no)
 
@@ -65,8 +70,33 @@ def get_text_of_area(body):
             img2.save(section_path)
 
             # extract text from each section
-            extracted_text = pytesseract.image_to_string(img2, lang='eng')
-            results.append({'key': key, 'text': extracted_text})
+            if isGoogleVision:
+                img_byte_arr = io.BytesIO()
+                img2.save(img_byte_arr, format='PNG')
+                img_byte_arr = img_byte_arr.getvalue()
+                image = vision.Image(content=img_byte_arr)
+
+                response = client.text_detection(image=image)
+                texts = response.text_annotations
+
+                text = texts[0]
+                # print('\n"{}"'.format(text.description))
+
+                # vertices = (['({},{})'.format(vertex.x, vertex.y)
+                #             for vertex in text.bounding_poly.vertices])
+
+                # print('bounds: {}'.format(','.join(vertices)))
+
+                if response.error.message:
+                    raise Exception(
+                        '{}\nFor more info on error messages, check: '
+                        'https://cloud.google.com/apis/design/errors'.format(
+                            response.error.message))
+
+                results.append({'key': key, 'text': text.description})
+            else:
+                extracted_text = pytesseract.image_to_string(img2, lang='eng')
+                results.append({'key': key, 'text': extracted_text})
         except Exception as e:
             print(e)
     return results

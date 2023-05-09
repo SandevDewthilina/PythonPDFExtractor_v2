@@ -2,9 +2,12 @@ from flask import Flask, request
 from flask_cors import CORS
 from scrape_fields import get_text_of_area
 from scrape_tables import get_detection_area, get_table_detection
+import os
 
 app = Flask(__name__)
 CORS(app)
+
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'pdfreaderproject-b8cdb789de5f.json'
 
 
 @app.route('/getTextOfArea', methods=['POST'])
