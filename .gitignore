@@ -1,4 +1,4 @@
 /temp_image_directory/*
 __pycache__
 *.json
-/upload_directory/*
+upload_directory
