@@ -105,6 +105,7 @@ def get_text_of_area(body):
     # initialize pytesseract
     pytesseract.tesseract_cmd = tesseract_path
 
+    # suppose there is only one page in the pdf
     output = []
     # cut and save each area
     for page_no in range(len(images)):
@@ -155,6 +156,6 @@ def get_text_of_area(body):
                     results.append({'key': key, 'text': extracted_text})
             except Exception as e:
                 print(e)
-        output.append(results)
+        output = results
         print(output)
     return output
