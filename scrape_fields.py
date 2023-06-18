@@ -1,4 +1,5 @@
 import requests
+import json
 import os
 import io
 from pdf2image import convert_from_path
@@ -9,6 +10,32 @@ import cv2
 import numpy as np
 
 tesseract_path = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+
+
+def get_azure_results(file_url):
+    url = "https://macho-ocr.cognitiveservices.azure.com/computervision/imageanalysis:analyze?api-version=2023-02-01-preview&language=en&gender-neutral-caption=False&features=read"
+    headers = {
+        "Content-Type": "application/json",
+        "Ocp-Apim-Subscription-Key": 'b45a258d2f334e3395ed2f4d623e3322'
+    }
+
+    payload = {
+        "url": file_url,
+    }
+
+    # Convert payload to JSON string
+    json_payload = json.dumps(payload)
+
+    # Make the POST request
+    response = requests.post(url, headers=headers, data=json_payload)
+
+    # Check the response status code
+    if response.status_code == 200:
+        # Successful request
+        response_data = response.json()
+        return response_data['readResult']['content']
+    else:
+        raise Exception('For more info on error messages')
 
 
 def extract_boundary(image_path, detect_contours):
@@ -130,27 +157,34 @@ def get_text_of_area(body):
                 if isGoogleVision:
                     img_byte_arr = io.BytesIO()
                     img2.save(img_byte_arr, format='PNG')
-                    img_byte_arr = img_byte_arr.getvalue()
-                    image = vision.Image(content=img_byte_arr)
 
-                    response = client.text_detection(image=image)
-                    texts = response.text_annotations
+                    if True:
+                        response = get_azure_results(fr'http://161.97.140.222:9200/reports/{upload_name}/sections/{key}.jpg')
+                        # response = get_azure_results(fr'http://localhost:9200/reports/{upload_name}/sections/{key}.jpg')
+                        # response = get_azure_results(r'http://161.97.140.222:9100/invoices/FirstRegistrationMonth.png')
+                        results.append({'key': key, 'text': response})
+                    else:
+                        img_byte_arr = img_byte_arr.getvalue()
+                        image = vision.Image(content=img_byte_arr)
 
-                    text = texts[0]
-                    # print('\n"{}"'.format(text.description))
+                        response = client.text_detection(image=image)
+                        texts = response.text_annotations
 
-                    # vertices = (['({},{})'.format(vertex.x, vertex.y)
-                    #             for vertex in text.bounding_poly.vertices])
+                        text = texts[0]
+                        # print('\n"{}"'.format(text.description))
 
-                    # print('bounds: {}'.format(','.join(vertices)))
+                        # vertices = (['({},{})'.format(vertex.x, vertex.y)
+                        #             for vertex in text.bounding_poly.vertices])
 
-                    if response.error.message:
-                        raise Exception(
-                            '{}\nFor more info on error messages, check: '
-                            'https://cloud.google.com/apis/design/errors'.format(
-                                response.error.message))
+                        # print('bounds: {}'.format(','.join(vertices)))
 
-                    results.append({'key': key, 'text': text.description})
+                        if response.error.message:
+                            raise Exception(
+                                '{}\nFor more info on error messages, check: '
+                                'https://cloud.google.com/apis/design/errors'.format(
+                                    response.error.message))
+
+                        results.append({'key': key, 'text': text.description})
                 else:
                     extracted_text = pytesseract.image_to_string(img2, lang='eng')
                     results.append({'key': key, 'text': extracted_text})
