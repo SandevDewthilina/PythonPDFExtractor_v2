@@ -159,6 +159,28 @@ def get_text_of_area(body):
                     img2.save(img_byte_arr, format='PNG')
 
                     if True:
+                        # Load the image to be placed on the white background
+                        new_image = cv2.imread(section_path)
+
+                        height, width = new_image.shape[:2]
+
+                        # Define the size of the white background
+                        background_width = width * 5
+                        background_height = height * 5
+
+                        # Create a blank white background
+                        background = np.ones((background_height, background_width, 3), dtype=np.uint8) * 255
+
+                        # Calculate the position to place the image at the center of the background
+                        x = (background_width - new_image.shape[1]) // 2
+                        y = (background_height - new_image.shape[0]) // 2
+
+                        # Overlay the image onto the background
+                        background[y:y + new_image.shape[0], x:x + new_image.shape[1]] = new_image
+
+                        # Display the result
+                        cv2.imwrite(section_path, background)
+
                         response = get_azure_results(fr'http://161.97.140.222:9200/reports/{upload_name}/sections/{key}.jpg')
                         # response = get_azure_results(fr'http://localhost:9200/reports/{upload_name}/sections/{key}.jpg')
                         # response = get_azure_results(r'http://161.97.140.222:9100/invoices/FirstRegistrationMonth.png')
