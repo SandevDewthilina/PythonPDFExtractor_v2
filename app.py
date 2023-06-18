@@ -7,7 +7,7 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'pdfreaderproject-b8cdb789de5f.json'
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'macho-389811-4308ddc9b7fc.json'
 
 
 @app.route('/reports/<path:path>')
