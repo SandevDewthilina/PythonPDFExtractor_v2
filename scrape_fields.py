@@ -35,7 +35,7 @@ def get_azure_results(file_url):
         response_data = response.json()
         return response_data['readResult']['content']
     else:
-        raise Exception('For more info on error messages')
+        raise Exception("Azure request exception " + str(response.json()['error']['message']))
 
 
 def extract_boundary(image_path, detect_contours):
